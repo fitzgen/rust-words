@@ -21,7 +21,7 @@ impl<K: Ord, V> Tree<K, V> {
     /// Associate the given value `v` with the key `k` in the tree. If there is
     /// already a value associated with the key, update it with the `modify`
     /// function.
-    pub fn insert_or_modify(self, k: K, v: V, modify: |V| -> V) -> Tree<K, V> {
+    pub fn insert_or_modify(self, k: K, v: V, modify: &mut |V| -> V) -> Tree<K, V> {
         match self {
             Tree::Null => Tree::Node { key: k,
                                        value: v,
@@ -31,7 +31,7 @@ impl<K: Ord, V> Tree<K, V> {
             Tree::Node { key, value, left, right } => {
                 match k.cmp(&key) {
                     Equal => Tree::Node { key: key,
-                                          value: modify(value),
+                                          value: (*modify)(value),
                                           left: left,
                                           right: right
                                         },
@@ -50,12 +50,12 @@ impl<K: Ord, V> Tree<K, V> {
         }
     }
 
-    /// Call the given closure on each node in the tree using an in order
+    /// Call the given closure `f` on each node in the tree using an in order
     /// traversal.
     ///
     /// (In this case, it is much easier to implement this callback interface
     /// than to implement Iterator for Tree).
-    pub fn each(&self, f: &mut |k: &K, v: &V| -> ()) {
+    pub fn each(&self, f: &mut |&K, &V|) {
         match *self {
             Tree::Null => return,
             Tree::Node { ref key, ref value, ref left, ref right } => {
@@ -65,4 +65,46 @@ impl<K: Ord, V> Tree<K, V> {
             }
         }
     }
+}
+
+#[test]
+fn iterate_over_inserted_items_in_order() {
+    let mut tree : Tree<uint, uint> = Tree::new();
+    let mut assert_no_modify : |uint| -> uint = |_| { assert!(false); 0u };
+
+    tree = tree.insert_or_modify(5, 10, &mut assert_no_modify);
+    tree = tree.insert_or_modify(4, 8, &mut assert_no_modify);
+    tree = tree.insert_or_modify(6, 12, &mut assert_no_modify);
+
+    let expected_keys = vec![4, 5, 6];
+    let expected_vals = vec![8, 10, 12];
+    let mut i = 0u;
+
+    tree.each(&mut |k, v| {
+        assert_eq!(*k, expected_keys[i]);
+        assert_eq!(*v, expected_vals[i]);
+        i = i + 1u;
+    });
+}
+
+#[test]
+fn modify_inserted_items() {
+    let mut tree : Tree<uint, uint> = Tree::new();
+    let mut assert_no_modify : |uint| -> uint = |_| { assert!(false); 0u };
+
+    tree = tree.insert_or_modify(2, 10, &mut assert_no_modify);
+    tree = tree.insert_or_modify(2, 1, &mut |v| {
+        assert_eq!(v, 10);
+        20u
+    });
+
+    let mut times_called = 0u;
+
+    tree.each(&mut |k, v| {
+        times_called = times_called + 1;
+        assert_eq!(times_called, 1u);
+
+        assert_eq!(*k, 2u);
+        assert_eq!(*v, 20u);
+    });
 }
