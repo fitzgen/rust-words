@@ -1,3 +1,7 @@
+/// A binary search tree (not currently balanced). A tree is either `Null` or it
+/// is a `Node` with a key, value, and left and right sub-trees.
+///
+/// The key type `K` must implement `Ord`.
 pub enum Tree<K, V> {
     Null,
     Node {
@@ -9,10 +13,14 @@ pub enum Tree<K, V> {
 }
 
 impl<K: Ord, V> Tree<K, V> {
+    /// Create a new Tree.
     pub fn new() -> Tree<K, V> {
         Tree::Null
     }
 
+    /// Associate the given value `v` with the key `k` in the tree. If there is
+    /// already a value associated with the key, update it with the `modify`
+    /// function.
     pub fn insert_or_modify(self, k: K, v: V, modify: |V| -> V) -> Tree<K, V> {
         match self {
             Tree::Null => Tree::Node { key: k,
@@ -42,15 +50,18 @@ impl<K: Ord, V> Tree<K, V> {
         }
     }
 
-    // Much easier to implement a callback interface than Iterator, in this
-    // case.
-    pub fn each(&self, lambda: &mut |k: &K, v: &V| -> ()) {
+    /// Call the given closure on each node in the tree using an in order
+    /// traversal.
+    ///
+    /// (In this case, it is much easier to implement this callback interface
+    /// than to implement Iterator for Tree).
+    pub fn each(&self, f: &mut |k: &K, v: &V| -> ()) {
         match *self {
             Tree::Null => return,
             Tree::Node { ref key, ref value, ref left, ref right } => {
-                left.each(lambda);
-                (*lambda)(key, value);
-                right.each(lambda);
+                left.each(f);
+                (*f)(key, value);
+                right.each(f);
             }
         }
     }

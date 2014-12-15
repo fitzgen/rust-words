@@ -2,6 +2,7 @@ use std::io;
 use std::io::stdio;
 use std::io::IoErrorKind;
 
+/// An iterator that yields each word from stdin until EOF is reached.
 pub struct WordReader {
     reader: stdio::StdinReader
 }
@@ -17,6 +18,7 @@ fn is_eof(err : &io::IoError) -> bool {
 }
 
 impl WordReader {
+    /// Create a new WordReader instance.
     pub fn new(r: stdio::StdinReader) -> WordReader {
         WordReader { reader: r }
     }
@@ -31,6 +33,7 @@ impl WordReader {
     }
 }
 
+/// Iterator implementation for WordReader.
 impl Iterator<String> for WordReader {
     fn next(&mut self) -> Option<String> {
         let mut word = String::new();

@@ -4,5 +4,3 @@ order and how many times it was found.
 TODO
 
 * Add unit tests
-
-* Add rustdoc comments

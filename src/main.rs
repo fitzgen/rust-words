@@ -1,9 +1,9 @@
 use std::io;
 
-mod my_tree;
-mod word_reader;
+pub mod my_tree;
+pub mod word_reader;
 
-fn main() {
+pub fn main() {
     let words : my_tree::Tree<String, uint> =
         word_reader::WordReader::new(io::stdin()).fold(
             my_tree::Tree::new(),
